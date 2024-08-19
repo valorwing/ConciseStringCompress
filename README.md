@@ -88,17 +88,12 @@ You can check  bechmark code in file conciseStringCompress_test.go
 
 ```bash
 goos: linux
-
 goarch: amd64
-
 pkg: github.com/valorwing/ConciseStringCompress
-
 cpu: Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz
 
-BenchmarkCompressString-8 50322 24303 ns/op 576 B/op 1 allocs/op
-
-BenchmarkDecompressString-8 107439 10851 ns/op 5568 B/op 2 allocs/op
-
+BenchmarkCompressString-8     	   51217	     23678 ns/op	     576 B/op	       1 allocs/op
+BenchmarkDecompressString-8   	  112016	     10349 ns/op	    5568 B/op	       2 allocs/op
 ```
 
 ## License
