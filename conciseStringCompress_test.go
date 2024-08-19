@@ -86,7 +86,6 @@ func BenchmarkCompressString(b *testing.B) {
 	}
 }
 
-// Бенчмарк тест для функции DecompressString
 func BenchmarkDecompressString(b *testing.B) {
 
 	compressor := conciseStringCompress.NewDefaultCompressor()
