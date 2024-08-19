@@ -1,13 +1,13 @@
 
 # ConciseStringCompress
 
-**ConciseStringCompress** is a Go library that demonstrates a string compression technique with a guaranteed minimum compression rate of 24%. The library operates with a time complexity of O(n) and utilizes a 6-bit (64-character) alphabet by default. However, users have the flexibility to specify their own custom alphabet.
+**ConciseStringCompress** is a Go library that demonstrates a string compression technique with a guaranteed minimum compression rate of 24%. The library operates with a time complexity of O(n) and utilizes a 6-bit (64-character) alphabet. However, users have the flexibility to specify their own custom alphabet.
 ## Features
 
 -   **Guaranteed Compression**: Achieve a minimum of 24% compression on strings.
 -   **Custom Alphabet Support**: Use the default 6-bit alphabet or define your own 64-character alphabet.
 -   **Efficient Compression**: The library compresses and decompresses strings with O(n) complexity.
--  **Network Transmission Ready**:Library guarantees that the last byte and bit will not be zero
+-  **Network Transmission Ready**: Library guarantees that the last byte and bit will not be zero
 ## Installation
 To use ConciseStringCompress, you can install it via `go get`:
 ```bash
