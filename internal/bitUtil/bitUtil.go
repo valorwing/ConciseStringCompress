@@ -16,6 +16,7 @@ func WriteBits(objectToWrite byte, writeBitLength uint8, targetArray *[]byte, in
 }
 func ReadBits(source *[]byte, bitLength uint8, byteOffset uint64, bitOffset uint8) (byte, bool) {
 	var result byte
+	var sourceTarget = *source
 	for i := uint8(0); i < bitLength; i++ {
 		if bitOffset == 8 {
 			byteOffset++
@@ -24,7 +25,7 @@ func ReadBits(source *[]byte, bitLength uint8, byteOffset uint64, bitOffset uint
 			}
 			bitOffset = 0
 		}
-		bit := (*source)[byteOffset] >> bitOffset & 1
+		bit := sourceTarget[byteOffset] >> bitOffset & 1
 		result |= bit << i
 		bitOffset++
 	}
