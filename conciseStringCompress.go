@@ -1,7 +1,6 @@
 package conciseStringCompress
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -9,9 +8,6 @@ import (
 	bitutil "github.com/valorwing/ConciseStringCompress/internal/bitUtil"
 	"github.com/valorwing/ConciseStringCompress/internal/constants"
 )
-
-var zeros []bool
-var ones []bool
 
 type Compressor struct {
 	alphabet     []rune
@@ -37,8 +33,8 @@ func NewDefaultCompressor() *Compressor {
 
 func (c *Compressor) SetAlphabet(alphabet []rune) error {
 
-	if len(alphabet) != 64 {
-		return errors.New(constants.ErrInvalidAlphabetLength + fmt.Sprint(len(alphabet)))
+	if len(alphabet) != constants.AlphabetLength {
+		return fmt.Errorf(constants.ErrInvalidAlphabetLengthFormat, constants.AlphabetLength, len(alphabet))
 	}
 
 	newAlphabetMap := map[rune]uint8{}
@@ -95,7 +91,7 @@ func (c *Compressor) CompressString(input string) ([]byte, error) {
 	for _, r := range input {
 
 		if !c.isInAlphabet(r) {
-			return nil, errors.New(string(r) + constants.ErrInvalidString)
+			return nil, fmt.Errorf(constants.ErrInvalidStringFormat, string(r), constants.AlphabetLength)
 		}
 		bitutil.WriteBits(byte(c.getIndex(r)), 6, retValPtr, byteOffset, bitOffset)
 		writedRunes++

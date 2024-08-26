@@ -22,11 +22,11 @@ var DefaultAlphabet = []rune{
 // contains a rune not present in the alphabet.
 // The format string uses two variables: the first %s is the incorrect rune,
 // and the second %d is the allowed custom alphabet length.
-const ErrInvalidStringFormat = "%s is not in the alphabet. You can use the package function to get the full supported characters, or you can define a custom %d-length alphabet."
+const ErrInvalidStringFormat = "%s is not in the alphabet. You can use the package function to get the full supported characters, or you can define a custom %d-length alphabet"
 
 // ErrInvalidAlphabetLengthFormat is the error triggered when attempting to set
 // a custom alphabet with a length different from the constant AlphabetLength.
-const ErrInvalidAlphabetLengthFormat = "Alphabet length must be equal to %d, not %d."
+const ErrInvalidAlphabetLengthFormat = "alphabet length must be equal to %d, not %d"
 
 // NetworkFixByte is a magic byte used when the compressed vector ends with 0
 // or when this byte is added to ensure correct decompression.
