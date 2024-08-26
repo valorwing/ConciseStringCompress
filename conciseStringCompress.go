@@ -10,6 +10,9 @@ import (
 	"github.com/valorwing/ConciseStringCompress/internal/constants"
 )
 
+var zeros []bool
+var ones []bool
+
 type Compressor struct {
 	alphabet     []rune
 	alphabetLock sync.RWMutex
@@ -144,6 +147,10 @@ func (c *Compressor) DecompressString(input []byte) string {
 		} else {
 			break
 		}
+
+		stringByte := fmt.Sprintf("%08b", bitByte)[2:]
+
+		fmt.Println(stringByte + " " + stringByte[:1] + " " + stringByte[5:] + " ")
 
 		currentReadBitsOffset += 6
 		if currentReadBitsOffset >= 8 {

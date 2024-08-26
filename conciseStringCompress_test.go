@@ -7,6 +7,32 @@ import (
 	conciseStringCompress "github.com/valorwing/ConciseStringCompress"
 )
 
+var DefaultAlphabet = []rune{
+	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+	'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+	'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+	'.', ',', '"', '\n', '\\', '/', ' ', '%', '@', '-', '+', '!',
+}
+
+func TestSmall(t *testing.T) {
+
+	str := string(DefaultAlphabet)
+
+	compressor := conciseStringCompress.NewDefaultCompressor()
+	data, err := compressor.CompressString(str)
+	if err != nil {
+		t.Fail()
+	}
+	if data[len(data)-1]&1 == 0 {
+		t.Fail()
+	}
+	restored := compressor.DecompressString(data)
+	if str != restored {
+		t.Fail()
+	}
+}
+
 func TestZeroOnly(t *testing.T) {
 
 	compressor := conciseStringCompress.NewDefaultCompressor()
