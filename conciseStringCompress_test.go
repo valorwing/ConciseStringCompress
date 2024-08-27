@@ -54,7 +54,7 @@ func TestZeroOnly(t *testing.T) {
 }
 
 func TestMediumText(t *testing.T) {
-	str := `Gallia est omnis divisa in partes tres, 
+	str := `Gallia est omnis divisa in partes tres,
 	quarum unam incolunt Belgae, aliam Aquitani, tertiam qui ipsorum lingua Celtae, nostra Galli appellantur.`
 
 	compressor := conciseStringCompress.NewDefaultCompressor()

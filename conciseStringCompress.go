@@ -3,6 +3,7 @@ package conciseStringCompress
 import (
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 
 	bitutil "github.com/valorwing/ConciseStringCompress/internal/bitUtil"
@@ -74,6 +75,7 @@ func (c *Compressor) CompressString(input string) ([]byte, error) {
 	if len(input) == 0 {
 		return []byte{}, nil
 	}
+	input = strings.ReplaceAll(input, "\t", "    ")
 
 	retVal := make([]byte, ((len([]byte(input))*7)/8)+1)
 	retValPtr := &retVal
@@ -186,5 +188,5 @@ func (c *Compressor) DecompressString(input []byte) string {
 		}
 	}
 	c.alphabetLock.RUnlock()
-	return string(retVal)
+	return strings.ReplaceAll(string(retVal), "    ", "\t")
 }
