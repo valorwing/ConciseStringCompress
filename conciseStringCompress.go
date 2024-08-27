@@ -10,17 +10,26 @@ import (
 	"github.com/valorwing/ConciseStringCompress/internal/constants"
 )
 
+type CompressorConfig struct {
+	NetworkFixByteEnabled  bool
+	TabOverAlphabetEnabled bool
+}
+
 type Compressor struct {
 	alphabet     []rune
 	alphabetLock sync.RWMutex
 	alphabetMap  map[rune]uint8
+	configLock   sync.RWMutex
+	config       CompressorConfig
 }
 
-func NewCustomAlphabetCompressor(alphabet []rune) *Compressor {
+func NewCustomAlphabetCompressor(alphabet []rune, config CompressorConfig) *Compressor {
 	retVal := &Compressor{
 		alphabet:     nil,
 		alphabetLock: sync.RWMutex{},
 		alphabetMap:  nil,
+		configLock:   sync.RWMutex{},
+		config:       config,
 	}
 
 	retVal.SetAlphabet(alphabet)
@@ -28,7 +37,7 @@ func NewCustomAlphabetCompressor(alphabet []rune) *Compressor {
 }
 
 func NewDefaultCompressor() *Compressor {
-	return NewCustomAlphabetCompressor(constants.DefaultAlphabet)
+	return NewCustomAlphabetCompressor(constants.DefaultAlphabet, CompressorConfig{})
 }
 
 func (c *Compressor) SetAlphabet(alphabet []rune) error {
@@ -46,6 +55,18 @@ func (c *Compressor) SetAlphabet(alphabet []rune) error {
 	c.alphabetMap = newAlphabetMap
 	c.alphabetLock.Unlock()
 	return nil
+}
+
+func (c *Compressor) GetConfig() CompressorConfig {
+	c.configLock.RLock()
+	defer c.configLock.RUnlock()
+	return c.config
+}
+
+func (c *Compressor) SetConfig(cfg CompressorConfig) {
+	c.configLock.Lock()
+	c.config = cfg
+	c.configLock.Unlock()
 }
 
 func (c *Compressor) GetAlphabet() []rune {
@@ -75,8 +96,11 @@ func (c *Compressor) CompressString(input string) ([]byte, error) {
 	if len(input) == 0 {
 		return []byte{}, nil
 	}
-	input = strings.ReplaceAll(input, "\t", "    ")
-
+	c.configLock.RLock()
+	if c.config.TabOverAlphabetEnabled {
+		input = strings.ReplaceAll(input, "\t", "    ")
+	}
+	c.configLock.RUnlock()
 	retVal := make([]byte, ((len([]byte(input))*7)/8)+1)
 	retValPtr := &retVal
 
@@ -122,10 +146,13 @@ func (c *Compressor) CompressString(input string) ([]byte, error) {
 	outLen := int(math.Ceil(float64(outLenBits) / 8.0))
 	retVal = retVal[:outLen]
 
-	if retVal[len(retVal)-1]&1 == 0 || retVal[len(retVal)-1] == constants.NetworkFixByte {
-		retVal = append(retVal, constants.NetworkFixByte)
+	c.configLock.RLock()
+	if c.config.NetworkFixByteEnabled {
+		if retVal[len(retVal)-1]&1 == 0 || retVal[len(retVal)-1] == constants.NetworkFixByte {
+			retVal = append(retVal, constants.NetworkFixByte)
+		}
 	}
-
+	c.configLock.RUnlock()
 	return retVal, nil
 }
 
@@ -139,9 +166,13 @@ func (c *Compressor) DecompressString(input []byte) string {
 	currentReadBitsOffset := uint8(0)
 	currentReadByteOffset := uint64(0)
 
-	if input[len(input)-1] == constants.NetworkFixByte {
-		input = input[:len(input)-1]
+	c.configLock.RLock()
+	if c.config.NetworkFixByteEnabled {
+		if input[len(input)-1] == constants.NetworkFixByte {
+			input = input[:len(input)-1]
+		}
 	}
+	c.configLock.RUnlock()
 
 	inputPtr := &input
 	c.alphabetLock.RLock()
@@ -188,5 +219,12 @@ func (c *Compressor) DecompressString(input []byte) string {
 		}
 	}
 	c.alphabetLock.RUnlock()
-	return strings.ReplaceAll(string(retVal), "    ", "\t")
+
+	retValStr := string(retVal)
+	c.configLock.RLock()
+	if c.config.TabOverAlphabetEnabled {
+		retValStr = strings.ReplaceAll(retValStr, "    ", "\t")
+	}
+	c.configLock.RUnlock()
+	return retValStr
 }

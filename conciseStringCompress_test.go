@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	conciseStringCompress "github.com/valorwing/ConciseStringCompress"
+	"github.com/valorwing/ConciseStringCompress/internal/constants"
 )
 
 var DefaultAlphabet = []rune{
@@ -27,9 +28,6 @@ func TestAlhpabet(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	if data[len(data)-1]&1 == 0 {
-		t.Fail()
-	}
 	restored := compressor.DecompressString(data)
 	if str != restored {
 		t.Fail()
@@ -44,20 +42,21 @@ func TestZeroOnly(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	if data[len(data)-1]&1 == 0 {
-		t.Fail()
-	}
 	restored := compressor.DecompressString(data)
 	if str != restored {
 		t.Fail()
 	}
 }
 
-func TestMediumText(t *testing.T) {
+func TestTabOverAlphabetAndNetworkFix(t *testing.T) {
 	str := `Gallia est omnis divisa in partes tres,
 	quarum unam incolunt Belgae, aliam Aquitani, tertiam qui ipsorum lingua Celtae, nostra Galli appellantur.`
 
-	compressor := conciseStringCompress.NewDefaultCompressor()
+	compressor := conciseStringCompress.NewCustomAlphabetCompressor(constants.DefaultAlphabet,
+		conciseStringCompress.CompressorConfig{
+			NetworkFixByteEnabled:  true,
+			TabOverAlphabetEnabled: true,
+		})
 	data, err := compressor.CompressString(str)
 	if err != nil {
 		fmt.Println(err)
@@ -88,10 +87,6 @@ func TestBaseCompressAndDecompress(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	if data[len(data)-1]&1 == 0 {
-		t.Fail()
-	}
-
 	restored := compressor.DecompressString(data)
 	if str != restored {
 		t.Fail()
