@@ -8,6 +8,9 @@ package constants
 // and 5-bit encoded with 6-bit as `0xxxxx`.
 const AlphabetLength = 96
 
+// FiveBitsAlphabetPartLength represents length of alpabet part can be encoded to 5 bits
+const FiveBitsAlphabetPartLength = 32
+
 // DefaultAlphabet is an optimal alphabet sorted by popularity.
 // It contains the most common 96 printable characters.
 var DefaultAlphabet = []rune{
@@ -15,7 +18,7 @@ var DefaultAlphabet = []rune{
 	'y', 'v', 'k', 'x', 'j', 'q', 'z', '.', ',', '-', '_', '!', '?', ':', ';', '"', '\'', '(', ')', '[',
 	']', '{', '}', '<', '>', '/', '\\', '|', '@', '#', '$', '%', '^', '&', '*', '+', '=', '~', '`', '0',
 	'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
-	'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+	'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '\n',
 }
 
 // ErrInvalidStringFormat is the error triggered when the input compressed string

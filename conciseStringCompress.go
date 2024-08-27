@@ -27,18 +27,15 @@ func NewCustomAlphabetCompressor(alphabet []rune) *Compressor {
 }
 
 func NewDefaultCompressor() *Compressor {
-
 	return NewCustomAlphabetCompressor(constants.DefaultAlphabet)
 }
 
 func (c *Compressor) SetAlphabet(alphabet []rune) error {
-
 	if len(alphabet) != constants.AlphabetLength {
 		return fmt.Errorf(constants.ErrInvalidAlphabetLengthFormat, constants.AlphabetLength, len(alphabet))
 	}
 
 	newAlphabetMap := map[rune]uint8{}
-
 	for i := range alphabet {
 		newAlphabetMap[alphabet[i]] = uint8(i)
 	}
@@ -51,7 +48,6 @@ func (c *Compressor) SetAlphabet(alphabet []rune) error {
 }
 
 func (c *Compressor) GetAlphabet() []rune {
-
 	c.alphabetLock.RLock()
 	retVal := c.alphabet
 	c.alphabetLock.RUnlock()
@@ -67,9 +63,7 @@ func (c *Compressor) isInAlphabet(r rune) bool {
 }
 
 func (c *Compressor) getIndex(r rune) uint8 {
-
 	v, ok := c.alphabetMap[r]
-
 	if !ok {
 		panic("not in alphabet")
 	}
@@ -81,35 +75,49 @@ func (c *Compressor) CompressString(input string) ([]byte, error) {
 		return []byte{}, nil
 	}
 
-	var retVal []byte = make([]uint8, ((len([]byte(input))*6)/8)+1)
+	retVal := make([]byte, ((len([]byte(input))*7)/8)+1)
 	retValPtr := &retVal
 
 	byteOffset := uint64(0)
 	bitOffset := uint8(0)
-	writedRunes := 0
+	writed6Bits := uint64(0)
+	writed7Bits := uint64(0)
 	c.alphabetLock.RLock()
-	for _, r := range input {
+	defer c.alphabetLock.RUnlock()
 
+	for _, r := range input {
 		if !c.isInAlphabet(r) {
 			return nil, fmt.Errorf(constants.ErrInvalidStringFormat, string(r), constants.AlphabetLength)
 		}
-		bitutil.WriteBits(byte(c.getIndex(r)), 6, retValPtr, byteOffset, bitOffset)
-		writedRunes++
-		bitOffset += 6
-		if bitOffset >= 8 {
+
+		index := c.getIndex(r)
+		var writeBuffByte byte
+		var writeBitsLen uint8
+		writeBuffByte = index
+		if index < constants.FiveBitsAlphabetPartLength {
+
+			writeBitsLen = 6
+			writeBuffByte = bitutil.ResetBit(writeBuffByte, 5)
+		} else {
+			writeBitsLen = 7
+			writeBuffByte -= constants.FiveBitsAlphabetPartLength
+			writeBuffByte = bitutil.SetBit(writeBuffByte, 6)
+		}
+		bitutil.WriteBits(writeBuffByte, writeBitsLen, retValPtr, byteOffset, bitOffset)
+		if writeBitsLen == 6 {
+			writed6Bits++
+		} else {
+			writed7Bits++
+		}
+		bitOffset += writeBitsLen
+		if bitOffset > 7 {
 			bitOffset -= 8
-			byteOffset += 1
+			byteOffset++
 		}
 	}
-	c.alphabetLock.RUnlock()
-	outLenBits := writedRunes * 6
 
-	outLen := int(math.Floor(float64(outLenBits) / float64(8)))
-
-	if outLenBits%8 != 0 {
-		outLen += 1
-	}
-
+	outLenBits := writed6Bits*6 + writed7Bits*7
+	outLen := int(math.Ceil(float64(outLenBits) / 8.0))
 	retVal = retVal[:outLen]
 
 	if retVal[len(retVal)-1]&1 == 0 || retVal[len(retVal)-1] == constants.NetworkFixByte {
@@ -125,7 +133,7 @@ func (c *Compressor) DecompressString(input []byte) string {
 	}
 
 	retVal := make([]rune, 0, len(input)*2)
-
+	inputLen := uint64(len(input))
 	currentReadBitsOffset := uint8(0)
 	currentReadByteOffset := uint64(0)
 
@@ -135,24 +143,44 @@ func (c *Compressor) DecompressString(input []byte) string {
 
 	inputPtr := &input
 	c.alphabetLock.RLock()
+	bitByte := byte(0)
+	readBitsOk := false
 	for {
+		bitByte = 0
+		bitByte, readBitsOk = bitutil.ReadBits(inputPtr, 1, currentReadByteOffset, currentReadBitsOffset)
+		if !readBitsOk {
+			break
+		}
 
-		bitByte, readBitsOk := bitutil.ReadBits(inputPtr, 6, currentReadByteOffset, currentReadBitsOffset)
+		currentReadBitsOffset += 1
+		if currentReadBitsOffset > 7 {
+			currentReadByteOffset += 1
+			currentReadBitsOffset -= 8
+			if currentReadByteOffset == inputLen {
+				break
+			}
+		}
+
+		if !bitutil.ReadBit(bitByte, 0) {
+			bitByte = 0
+			bitByte, readBitsOk = bitutil.ReadBits(inputPtr, 5, currentReadByteOffset, currentReadBitsOffset)
+			currentReadBitsOffset += 5
+		} else {
+			bitByte = 0
+			bitByte, readBitsOk = bitutil.ReadBits(inputPtr, 6, currentReadByteOffset, currentReadBitsOffset)
+			bitByte += constants.FiveBitsAlphabetPartLength
+			currentReadBitsOffset += 6
+		}
 		if readBitsOk {
 			retVal = append(retVal, c.alphabet[bitByte])
 		} else {
 			break
 		}
 
-		stringByte := fmt.Sprintf("%08b", bitByte)[2:]
-
-		fmt.Println(stringByte + " " + stringByte[:1] + " " + stringByte[5:] + " ")
-
-		currentReadBitsOffset += 6
-		if currentReadBitsOffset >= 8 {
+		if currentReadBitsOffset > 7 {
 			currentReadBitsOffset -= 8
 			currentReadByteOffset += 1
-			if currentReadByteOffset == uint64(len(input)) {
+			if currentReadByteOffset == inputLen {
 				break
 			}
 		}

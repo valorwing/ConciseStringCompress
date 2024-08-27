@@ -12,15 +12,18 @@ var DefaultAlphabet = []rune{
 	'y', 'v', 'k', 'x', 'j', 'q', 'z', '.', ',', '-', '_', '!', '?', ':', ';', '"', '\'', '(', ')', '[',
 	']', '{', '}', '<', '>', '/', '\\', '|', '@', '#', '$', '%', '^', '&', '*', '+', '=', '~', '`', '0',
 	'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
-	'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+	'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '\n',
 }
 
-func TestSmall(t *testing.T) {
+func TestAlhpabet(t *testing.T) {
 
 	str := string(DefaultAlphabet)
 
 	compressor := conciseStringCompress.NewDefaultCompressor()
 	data, err := compressor.CompressString(str)
+	fmt.Println()
+	fmt.Printf("Readed first : %08b \n", data[0])
+	fmt.Printf("Readed second: %08b \n", data[1])
 	if err != nil {
 		t.Fail()
 	}
@@ -51,11 +54,13 @@ func TestZeroOnly(t *testing.T) {
 }
 
 func TestMediumText(t *testing.T) {
-	str := `Gallia est omnis divisa in partes tres, quarum unam incolunt Belgae, aliam Aquitani, tertiam qui ipsorum lingua Celtae, nostra Galli appellantur.`
+	str := `Gallia est omnis divisa in partes tres, 
+	quarum unam incolunt Belgae, aliam Aquitani, tertiam qui ipsorum lingua Celtae, nostra Galli appellantur.`
 
 	compressor := conciseStringCompress.NewDefaultCompressor()
 	data, err := compressor.CompressString(str)
 	if err != nil {
+		fmt.Println(err)
 		t.Fail()
 	}
 	if data[len(data)-1]&1 == 0 {
@@ -63,6 +68,7 @@ func TestMediumText(t *testing.T) {
 	}
 	restored := compressor.DecompressString(data)
 	if str != restored {
+		fmt.Println("Fail: testData: ", str, " restored: ", restored)
 		t.Fail()
 	}
 	rawData := []byte(str)
