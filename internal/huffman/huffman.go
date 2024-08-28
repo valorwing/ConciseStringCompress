@@ -5,7 +5,7 @@ import (
 )
 
 type Node struct {
-	char        byte
+	char        uint16
 	frequency   float64
 	left, right *Node
 }
@@ -28,7 +28,7 @@ func (h *HuffmanHeap) Pop() interface{} {
 	return x
 }
 
-func BuildTree(frequencies map[byte]float64) *Node {
+func BuildTree(frequencies map[uint16]float64) *Node {
 	h := &HuffmanHeap{}
 	heap.Init(h)
 
@@ -52,7 +52,7 @@ func BuildTree(frequencies map[byte]float64) *Node {
 	return heap.Pop(h).(*Node)
 }
 
-func GenerateCodes(node *Node, prefix string, codes map[byte]string) {
+func GenerateCodes(node *Node, prefix string, codes map[uint16]string) {
 	if node == nil {
 		return
 	}
@@ -65,24 +65,45 @@ func GenerateCodes(node *Node, prefix string, codes map[byte]string) {
 	GenerateCodes(node.right, prefix+"1", codes)
 }
 
-func Encode(input []byte, codes map[byte]string) []byte {
+func Encode(input []byte, codes map[uint16]string) []byte {
 	var output []byte
 	var currentByte byte
 	var bitCount uint8
 
-	for char := range input {
-		code := codes[input[char]]
-		for _, bit := range code {
-			if bit == '1' {
-				currentByte |= 1 << (7 - bitCount)
-			}
-			bitCount++
-			if bitCount == 8 {
-				output = append(output, currentByte)
-				currentByte = 0
-				bitCount = 0
+	var previosByte byte = 0
+	var previosByteIsEmpty = true
+
+	var lastRawByte = false
+	var inputLen = uint64(len(input))
+	var lastByteIndex = inputLen - 1
+
+	var code string
+	for i := uint64(0); i < inputLen; i++ {
+		if previosByteIsEmpty {
+			previosByteIsEmpty = false
+			previosByte = input[i]
+		} else {
+			previosByteIsEmpty = true
+			code = codes[uint16(previosByte)|uint16(input[i])<<8]
+			for _, bit := range code {
+				if bit == '1' {
+					currentByte |= 1 << (7 - bitCount)
+				}
+				bitCount++
+				if bitCount == 8 {
+					output = append(output, currentByte)
+					currentByte = 0
+					bitCount = 0
+				}
 			}
 		}
+
+	}
+
+	for char := range input {
+
+		code := codes[input[char]]
+
 	}
 
 	if bitCount > 0 {
