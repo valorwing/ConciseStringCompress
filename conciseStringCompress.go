@@ -92,6 +92,39 @@ func (c *Compressor) getIndex(r rune) uint8 {
 	return v
 }
 
+func (c *Compressor) CompressWithoutPack(input string) ([]byte, error) {
+	if len(input) == 0 {
+		return []byte{}, nil
+	}
+	c.configLock.RLock()
+	if c.config.TabOverAlphabetEnabled {
+		input = strings.ReplaceAll(input, "\t", "    ")
+	}
+	c.configLock.RUnlock()
+	retVal := make([]byte, len([]byte(input)))
+
+	c.alphabetLock.RLock()
+	defer c.alphabetLock.RUnlock()
+	writeBuffByte := byte(0)
+	for i, r := range input {
+		if !c.isInAlphabet(r) {
+			return nil, fmt.Errorf(constants.ErrInvalidStringFormat, string(r), constants.AlphabetLength)
+		}
+
+		writeBuffByte = c.getIndex(r)
+		if writeBuffByte < constants.FiveBitsAlphabetPartLength {
+
+			writeBuffByte = bitutil.ResetBit(writeBuffByte, 5)
+		} else {
+
+			writeBuffByte -= constants.FiveBitsAlphabetPartLength
+			writeBuffByte = bitutil.SetBit(writeBuffByte, 6)
+		}
+		retVal[i] = writeBuffByte
+	}
+	return retVal, nil
+}
+
 func (c *Compressor) CompressString(input string) ([]byte, error) {
 	if len(input) == 0 {
 		return []byte{}, nil
@@ -154,6 +187,25 @@ func (c *Compressor) CompressString(input string) ([]byte, error) {
 	}
 	c.configLock.RUnlock()
 	return retVal, nil
+}
+
+func (c *Compressor) UnpackedDecompress(input []byte) string {
+	if len(input) == 0 {
+		return ""
+	}
+	retVal := make([]rune, len(input))
+	c.alphabetLock.RLock()
+	defer c.alphabetLock.RUnlock()
+	for i := range input {
+
+		if !bitutil.ReadBit(input[i], 6) {
+			retVal[i] = c.alphabet[input[i]]
+		} else {
+			tmp := bitutil.ResetBit(input[i], 6)
+			retVal[i] = c.alphabet[tmp+constants.FiveBitsAlphabetPartLength]
+		}
+	}
+	return string(retVal)
 }
 
 func (c *Compressor) DecompressString(input []byte) string {

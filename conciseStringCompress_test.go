@@ -8,12 +8,24 @@ import (
 	"github.com/valorwing/ConciseStringCompress/internal/constants"
 )
 
-var DefaultAlphabet = []rune{
-	' ', 'e', 't', 'a', 'o', 'i', 'n', 's', 'r', 'h', 'l', 'd', 'c', 'u', 'm', 'f', 'p', 'g', 'w', 'b',
-	'y', 'v', 'k', 'x', 'j', 'q', 'z', '.', ',', '-', '_', '!', '?', ':', ';', '"', '\'', '(', ')', '[',
-	']', '{', '}', '<', '>', '/', '\\', '|', '@', '#', '$', '%', '^', '&', '*', '+', '=', '~', '`', '0',
-	'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
-	'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '\n',
+var DefaultAlphabet = constants.DefaultAlphabet
+
+func TestRawWithoutPack(t *testing.T) {
+	str := string(DefaultAlphabet)
+
+	compressor := conciseStringCompress.NewDefaultCompressor()
+	data, err := compressor.CompressWithoutPack(str)
+	fmt.Println()
+	fmt.Printf("Readed first : %08b \n", data[0])
+	fmt.Printf("Readed second: %08b \n", data[1])
+	if err != nil {
+		t.Fail()
+	}
+	restored := compressor.UnpackedDecompress(data)
+	if str != restored {
+		t.Fail()
+	}
+
 }
 
 func TestAlhpabet(t *testing.T) {
@@ -78,8 +90,13 @@ func TestTabOverAlphabetAndNetworkFix(t *testing.T) {
 
 func TestBaseCompressAndDecompress(t *testing.T) {
 
-	str := `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin nec tristique nisi, ut posuere dolor. Maecenas consectetur imperdiet nunc et interdum. Duis rutrum nisl non cursus volutpat. Proin cursus gravida pellentesque. Proin volutpat et felis non varius. Integer dictum consectetur rutrum. Nunc a libero iaculis, gravida sem non, accumsan neque. Proin sit amet felis placerat, vestibulum risus sit amet, sollicitudin tellus. Sed non posuere mauris. Pellentesque vitae odio ac tellus scelerisque rutrum. Mauris ut suscipit nisl. Proin rutrum venenatis eros, eu malesuada dolor. Vestibulum bibendum enim vitae viverra sodales. Morbi congue lacinia risus, quis posuere mi suscipit in. Donec nulla.`
+	str := `In the vast expanse of the universe, amidst the countless stars and galaxies, lies a small blue planet, teeming with life. This planet, known as Earth, is home to a multitude of species, each uniquely adapted to its environment. From the towering mountains to the deep blue oceans, every corner of this world is filled with wonder and mystery.
 
+The story of Earth is a story of evolution, adaptation, and survival. Over billions of years, life has evolved in countless ways, from simple single-celled organisms to complex beings capable of thought and emotion. Humans, one of the most recent arrivals on this ancient planet, have developed remarkable technologies, explored vast landscapes, and even ventured into the depths of space.
+
+Yet, despite all our advancements, there is still so much we do not understand. The mysteries of the universe continue to elude us, and the more we learn, the more questions we have. What lies beyond the edge of the observable universe? Are we alone in this vast cosmos, or are there other intelligent beings out there, looking up at their skies and wondering the same thing?
+
+As we look to the future, we must remember the importance of exploration, curiosity, and the pursuit of knowledge. Our journey has only just begun, and there are infinite possibilities waiting to be discovered.`
 	compressor := conciseStringCompress.NewDefaultCompressor()
 	rawData := []byte(str)
 
